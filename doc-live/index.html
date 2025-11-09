@@ -168,7 +168,7 @@
         box-shadow: 0 2px 8px rgba(255, 252, 0, 0.3) !important;
       }
 
-    
+
 
 
       /* keep main content still */
@@ -309,6 +309,12 @@
       border: none !important;
     }
 
+    pre .token.string,
+    .token.template-string {
+      color: darkgoldenrod !important;
+      /* Use Valdi yellow for strings */
+    }
+
     /* Links */
     .markdown-section a {
       color: #2C3E50 !important;
@@ -406,6 +412,13 @@
         width: 60px;
         height: 60px;
       }
+
+      /* Hide hamburger when searching */
+      body.searching .sidebar-toggle {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transition: opacity 0.2s ease !important;
+      }
     }
   </style>
 </head>
@@ -495,6 +508,62 @@
               </svg>
             `;
             document.body.appendChild(githubCorner);
+
+            // Mobile search UX improvements
+            const searchInput = document.querySelector('.search input[type="search"]');
+            if (searchInput) {
+              // Hide hamburger when searching on mobile
+              searchInput.addEventListener('input', function () {
+                if (this.value.trim() !== '') {
+                  document.body.classList.add('searching');
+                } else {
+                  document.body.classList.remove('searching');
+                }
+              });
+            }
+
+            // Show hamburger when clear button is clicked
+            const clearButton = document.querySelector('.search .clear-button');
+            if (clearButton) {
+              clearButton.addEventListener('click', function () {
+                document.body.classList.remove('searching');
+              });
+            }
+
+            // Close sidebar when clicking search result on mobile
+            const isMobile = () => window.innerWidth <= 768;
+            document.addEventListener('click', function (e) {
+              if (isMobile() && e.target.closest('.search .results-panel .matching-post a')) {
+                // Close sidebar by adding 'close' class to body
+                document.body.classList.add('close');
+                // Clear search input
+                const searchInput = document.querySelector('.search input[type="search"]');
+                if (searchInput) {
+                  searchInput.value = '';
+                  searchInput.dispatchEvent(new Event('input'));
+                }
+                // Remove searching class
+                document.body.classList.remove('searching');
+              }
+            });
+
+            // Clear search when closing sidebar manually on mobile
+            const sidebarToggle = document.querySelector('.sidebar-toggle');
+            if (sidebarToggle) {
+              sidebarToggle.addEventListener('click', function () {
+                if (isMobile()) {
+                  // If sidebar is open (about to close), clear search
+                  if (!document.body.classList.contains('close')) {
+                    const searchInput = document.querySelector('.search input[type="search"]');
+                    if (searchInput && searchInput.value.trim() !== '') {
+                      searchInput.value = '';
+                      searchInput.dispatchEvent(new Event('input'));
+                      document.body.classList.remove('searching');
+                    }
+                  }
+                }
+              });
+            }
           });
 
           hook.doneEach(function () {
